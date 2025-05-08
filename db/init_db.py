@@ -31,12 +31,15 @@ def init_db():
             valor_recomendado TEXT,
             descripcion TEXT
         );
-
-        CREATE TABLE IF NOT EXISTS usuarios (
+                         
+        CREATE TABLE IF NOT EXISTS formularios_detectados (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            usuario TEXT NOT NULL UNIQUE,
-            contrasena_hash TEXT NOT NULL,
-            email TEXT
+            url TEXT NOT NULL,
+            metodo TEXT,
+            accion TEXT,
+            campo_nombre TEXT,
+            campo_tipo TEXT,
+            potencialmente_vulnerable INTEGER
         );
     """)
 

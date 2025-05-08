@@ -13,7 +13,7 @@ def mostrar_resultados():
     if not filas:
         print("No hay resultados guardados.")
     else:
-        print("Historial de escaneos:")
+        print("\nHistorial de escaneos:\n")
         for fila in filas:
             print(f"ID: {fila[0]}")
             print(f"URL: {fila[1]}")
@@ -24,8 +24,7 @@ def mostrar_resultados():
 
     conexion.close()
 
-
-# Método que guarda los resultados del escaneo en la tabla resultados_escaneos
+# Método que guarda los resultados del escaneo de cabeceras en la tabla resultados_escaneos
 def guardar_resultado_escaneo(resultado):
     conexion = sqlite3.connect("db/scanner.db")
     cursor = conexion.cursor()
@@ -36,11 +35,67 @@ def guardar_resultado_escaneo(resultado):
     nivel = "Alto" if vulnerabilidades else "Bajo"
     fecha = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
+    # Verificar si ya existe esa URL
+    cursor.execute("SELECT 1 FROM resultados_escaneos WHERE url = ?", (url,))
+    if cursor.fetchone():
+        conexion.close()
+        return False  
+
     cursor.execute("""
         INSERT INTO resultados_escaneos (url, fecha_escaneo, nivel_riesgo, vulnerabilidades)
         VALUES (?, ?, ?, ?)
     """, (url, fecha, nivel, vulnerabilidades))
-    
+
     conexion.commit()
     conexion.close()
-    print(f"Resultados del escaneo guardados para {url}.")
+    return True  
+
+
+
+# Método que guarda un campo de formulario detectado
+def guardar_formulario(url, metodo, accion, campo_nombre, campo_tipo, potencial):
+    conexion = sqlite3.connect("db/scanner.db")
+    cursor = conexion.cursor()
+
+    # Verificar si ese campo ya fue guardado para esa URL + acción + nombre de campo
+    cursor.execute("""
+        SELECT 1 FROM formularios_detectados
+        WHERE url = ? AND accion = ? AND campo_nombre = ?
+    """, (url, accion, campo_nombre))
+
+    if cursor.fetchone():
+        print(f"La URL '{url}' ya fue escaneada previamente. No se almacenará")
+        conexion.close()
+        return
+
+    cursor.execute("""
+        INSERT INTO formularios_detectados (url, metodo, accion, campo_nombre, campo_tipo, potencialmente_vulnerable)
+        VALUES (?, ?, ?, ?, ?, ?)
+    """, (url, metodo, accion, campo_nombre, campo_tipo, int(potencial)))
+
+    conexion.commit()
+    conexion.close()
+
+
+# Método que muestra todos los formularios detectados almacenados
+def mostrar_formularios_detectados():
+    conexion = sqlite3.connect("db/scanner.db")
+    cursor = conexion.cursor()
+
+    cursor.execute("SELECT * FROM formularios_detectados")
+    filas = cursor.fetchall()
+
+    if not filas:
+        print("No hay formularios detectados en la base de datos.")
+    else:
+        print("\nFormularios detectados en escaneos anteriores:\n")
+        for fila in filas:
+            print(f"ID: {fila[0]}")
+            print(f"URL: {fila[1]}")
+            print(f"Método: {fila[2]}")
+            print(f"Acción: {fila[3]}")
+            print(f"Campo: {fila[4]} (tipo: {fila[5]})")
+            print(f"¿Potencialmente vulnerable?: {'Sí' if fila[6] else 'No'}")
+            print("-" * 40)
+
+    conexion.close()
