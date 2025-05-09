@@ -1,9 +1,9 @@
 # Importaciones
-import requests
-from bs4 import BeautifulSoup
-from utils.db import guardar_formulario
+import requests  # Para realizar peticiones HTTP
+from bs4 import BeautifulSoup  # Para analizar el HTML
+from utils.db import guardar_formulario  # Para guardar formularios detectados
 
-# Cabeceras de seguridad que debería tener una página web
+# Lista de cabeceras HTTP de seguridad que deberían estar presentes
 CABECERAS_SEGURIDAD = [
     "X-Frame-Options",
     "X-XSS-Protection",
@@ -12,7 +12,7 @@ CABECERAS_SEGURIDAD = [
     "Referrer-Policy"
 ]
 
-# Función que escanea una URL y devuelve las cabeceras ausentes
+# Función que escanea una URL y devuelve las cabeceras ausentes y presentes
 def escanear_cabeceras(url):
     try:
         respuesta = requests.get(url, timeout=5)
@@ -27,7 +27,8 @@ def escanear_cabeceras(url):
             "URL": url,
             "Código de Estado": respuesta.status_code,
             "Cabeceras Presentes": [c for c in CABECERAS_SEGURIDAD if c in cabeceras],
-            "Cabeceras Ausentes": ausentes
+            "Cabeceras Ausentes": ausentes,
+            
         }
 
     except requests.RequestException as e:
@@ -35,8 +36,10 @@ def escanear_cabeceras(url):
             "URL": url,
             "Error": str(e)
         }
+    
+  
 
-# Función que detecta formularios en una página web
+# Función que escanea los formularios de una página web y guarda los campos encontrados
 def escanear_formularios(url):
     try:
         respuesta = requests.get(url, timeout=5)
@@ -44,7 +47,7 @@ def escanear_formularios(url):
         formularios = soup.find_all("form")
 
         if not formularios:
-            from utils.db import guardar_formulario
+            # Si no se encuentra ningún formulario, se registra igualmente
             guardar_formulario(
                 url=url,
                 metodo="N/A",
@@ -56,16 +59,15 @@ def escanear_formularios(url):
             print("No se encontraron formularios en la página.")
             return
 
-
-        print(f"\nSe encontraron {len(formularios)} formulario(s) en {url}:\n")
+        print(f"Se encontraron {len(formularios)} formulario(s) en {url}:\n")
 
         for i, formulario in enumerate(formularios, start=1):
             metodo = formulario.get("method", "GET").upper()
             accion = formulario.get("action", url)
 
             print(f"Formulario {i}:")
-            print(f"  Método: {metodo}")
-            print(f"  Acción: {accion}")
+            print(f"Método: {metodo}")
+            print(f"Acción: {accion}")
 
             inputs = formulario.find_all(["input", "textarea"])
             for input_tag in inputs:
@@ -73,9 +75,8 @@ def escanear_formularios(url):
                 nombre = input_tag.get("name", "")
                 potencial = tipo in ["text", "search", "email", "password"]
 
-                print(f"    Campo: {nombre} (tipo: {tipo}) {'Potencialmente vulnerable' if potencial else ''}")
+                print(f"Campo: {nombre} (tipo: {tipo}) {'Potencialmente vulnerable' if potencial else ''}")
 
-                # Guardar en base de datos
                 guardar_formulario(
                     url=url,
                     metodo=metodo,
@@ -84,8 +85,6 @@ def escanear_formularios(url):
                     campo_tipo=tipo,
                     potencial=potencial
                 )
-
-            print("-" * 40)
 
     except requests.RequestException as e:
         print(f"Error al acceder a la URL: {e}")
