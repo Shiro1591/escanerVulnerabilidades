@@ -1,14 +1,18 @@
+# Importaciones 
 import sqlite3
 import os
 
+# Método que inicializa la base de datos y crea las tablas necesarias
 def init_db():
-    # Crea la carpeta "db" si no existe
+
+    # Verifica si la carpeta "db" existe, si no, la crea
     if not os.path.exists("db"):
         os.makedirs("db")
 
     conn = sqlite3.connect("db/scanner.db")
     cursor = conn.cursor()
 
+    # Ejecuta el script para crear las tablas
     cursor.executescript("""
         CREATE TABLE IF NOT EXISTS resultados_escaneos (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -43,9 +47,10 @@ def init_db():
         );
     """)
 
+    # Hace commit para guardar los cambios y cierra la conexión
     conn.commit()
     conn.close()
-    print("Base de datos creada con las tablas principales.")
 
+    # Ejecuta la función que crea la BD solo si se esta ejecutando directamente
 if __name__ == "__main__":
     init_db()

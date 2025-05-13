@@ -2,37 +2,17 @@
 import sqlite3, os, json, csv
 from datetime import datetime
 
-# Muestra por consola los resultados de escaneos de cabeceras
-def mostrar_resultados():
-    conexion = sqlite3.connect("db/scanner.db")
-    cursor = conexion.cursor()
-
-    cursor.execute("SELECT * FROM resultados_escaneos")
-    filas = cursor.fetchall()
-
-    if not filas:
-        print("No hay resultados guardados.")
-    else:
-        print("\nHistorial de escaneos:\n")
-        for fila in filas:
-            print(f"ID: {fila[0]}") 
-            print(f"URL: {fila[1]}")
-            print(f"Fecha: {fila[2]}")
-            print(f"Nivel de riesgo: {fila[3]}")
-            print(f"Vulnerabilidades: {fila[4]}")
-            print("-" * 40)
-
-    conexion.close()
-
-# Guarda un escaneo de cabeceras en la base de datos si la URL aún no fue registrada
+# Método que guarda los resultados de un escaneo de cabeceras en la base de datos
 def guardar_resultado_escaneo(resultado):
     conexion = sqlite3.connect("db/scanner.db")
     cursor = conexion.cursor()
 
     url = resultado.get("URL", "desconocido")
     estado = resultado.get("Código de Estado", None)
-    vulnerabilidades = ", ".join(resultado.get("Cabeceras Ausentes", []))
-    cantidad = len(vulnerabilidades)
+    cabeceras_ausentes = resultado.get("Cabeceras Ausentes", [])
+    vulnerabilidades = ", ".join(cabeceras_ausentes)
+    cantidad = len(cabeceras_ausentes)
+
     if cantidad >= 3:
         nivel = "Alto"
     elif cantidad >= 1:
@@ -42,7 +22,7 @@ def guardar_resultado_escaneo(resultado):
 
     fecha = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-    # No guardar si ya existe un escaneo para esa URL
+    # Comprueba si ya existe un escaneo con esa URL y si ya fue escaneada no la almacena de nuevo
     cursor.execute("SELECT 1 FROM resultados_escaneos WHERE url = ?", (url,))
     if cursor.fetchone():
         conexion.close()
@@ -57,7 +37,7 @@ def guardar_resultado_escaneo(resultado):
     conexion.close()
     return True
 
-# Guarda un campo detectado en un formulario si no está duplicado
+# Método que guarda los resultados de un escaneo de formularios en la base de datos, evitando duplicados
 def guardar_formulario(url, metodo, accion, campo_nombre, campo_tipo, potencial):
     conexion = sqlite3.connect("db/scanner.db")
     cursor = conexion.cursor()
@@ -79,40 +59,18 @@ def guardar_formulario(url, metodo, accion, campo_nombre, campo_tipo, potencial)
     conexion.commit()
     conexion.close()
 
-# Muestra por consola todos los formularios detectados almacenados
-def mostrar_formularios_detectados():
-    conexion = sqlite3.connect("db/scanner.db")
-    cursor = conexion.cursor()
-
-    cursor.execute("SELECT * FROM formularios_detectados")
-    filas = cursor.fetchall()
-
-    if not filas:
-        print("No hay formularios detectados en la base de datos.")
-    else:
-        print("\nFormularios detectados en escaneos anteriores:\n")
-        for fila in filas:
-            print(f"ID: {fila[0]}")
-            print(f"URL: {fila[1]}")
-            print(f"Método: {fila[2]}")
-            print(f"Acción: {fila[3]}")
-            print(f"Campo: {fila[4]} (tipo: {fila[5]})")
-            print(f"¿Potencialmente vulnerable?: {'Sí' if fila[6] else 'No'}")
-
-    conexion.close()
-
-# Define la ruta para guardar los documentos de vulnerabilidades
+# Método que define la ruta para guardar los documentos de vulnerabilidades
 def ruta_documentos_vulnerabilidades(nombre_archivo):
     carpeta = os.path.join(os.path.expanduser("~"), "Documents", "Datos vulnerabilidades")
     os.makedirs(carpeta, exist_ok=True)
     return os.path.join(carpeta, nombre_archivo)
 
-# Exporta los resultados de escaneos y formularios detectados a un archivo JSON
+# Método que exporta los escaneos de cabeceras y formularios detectados a un archivo JSON
 def exportar_a_json(nombre_archivo="export_resultados.json"):
     conexion = sqlite3.connect("db/scanner.db")
     cursor = conexion.cursor()
 
-    # Escaneos
+    # Cabeceras
     cursor.execute("SELECT url, fecha_escaneo, nivel_riesgo, vulnerabilidades FROM resultados_escaneos")
     escaneos = cursor.fetchall()
     escaneos_json = [
@@ -153,7 +111,7 @@ def exportar_a_json(nombre_archivo="export_resultados.json"):
 
     return nombre_archivo
 
-# Exporta los resultados de escaneos y formularios detectados a un archivo CSV
+# Método que exporta los escaneos de cabeceras y formularios detectados a un archivo CSV
 def exportar_a_csv(nombre_archivo="export_resultados.csv"):
     conexion = sqlite3.connect("db/scanner.db")
     cursor = conexion.cursor()
@@ -162,7 +120,7 @@ def exportar_a_csv(nombre_archivo="export_resultados.csv"):
     with open(nombre_archivo, mode="w", newline='', encoding="utf-8") as f:
         writer = csv.writer(f)
 
-        # Escaneos
+        # Cabeceras
         writer.writerow(["[ESCANEOS DE CABECERAS]"])
         writer.writerow(["URL", "Fecha", "Nivel de Riesgo", "Cabeceras Ausentes"])
         cursor.execute("SELECT url, fecha_escaneo, nivel_riesgo, vulnerabilidades FROM resultados_escaneos")

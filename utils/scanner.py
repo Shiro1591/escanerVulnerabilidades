@@ -1,7 +1,7 @@
 # Importaciones
-import requests  # Para realizar peticiones HTTP
-from bs4 import BeautifulSoup  # Para analizar el HTML
-from utils.db import guardar_formulario  # Para guardar formularios detectados
+import requests  
+from bs4 import BeautifulSoup  
+from utils.db import guardar_formulario  
 
 # Lista de cabeceras HTTP de seguridad que deberían estar presentes
 CABECERAS_SEGURIDAD = [
@@ -12,7 +12,7 @@ CABECERAS_SEGURIDAD = [
     "Referrer-Policy"
 ]
 
-# Función que escanea una URL y devuelve las cabeceras ausentes y presentes
+# Método que escanea la URL y devuelve las cabeceras ausentes y presentes
 def escanear_cabeceras(url):
     try:
         respuesta = requests.get(url, timeout=5)
@@ -38,8 +38,7 @@ def escanear_cabeceras(url):
         }
     
   
-
-# Función que escanea los formularios de una página web y guarda los campos encontrados
+# Método que escanea la URL y devuelve los formularios encontrados
 def escanear_formularios(url):
     try:
         respuesta = requests.get(url, timeout=5)
@@ -47,7 +46,8 @@ def escanear_formularios(url):
         formularios = soup.find_all("form")
 
         if not formularios:
-            # Si no se encuentra ningún formulario, se registra igualmente
+
+            # En caso de no encontrar formularios, se guarda un registro en la base de datos de todas formas
             guardar_formulario(
                 url=url,
                 metodo="N/A",
@@ -85,6 +85,8 @@ def escanear_formularios(url):
                     campo_tipo=tipo,
                     potencial=potencial
                 )
+
+            print("-" * 40)
 
     except requests.RequestException as e:
         print(f"Error al acceder a la URL: {e}")

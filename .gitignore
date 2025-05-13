@@ -1,5 +1,7 @@
 __pycache__/
 *.pyc
-db/scanner.db
-venv/
+*.db
+db/
 .env
+.DS_Store
+*.log

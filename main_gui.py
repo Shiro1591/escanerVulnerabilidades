@@ -6,23 +6,24 @@ from tkinter import messagebox
 from utils.scanner import escanear_cabeceras as escanear_cabeceras_funcion
 from utils.scanner import escanear_formularios as escanear_formularios_funcion
 from utils.db import guardar_resultado_escaneo, exportar_a_json, exportar_a_csv
-
+from db.init_db import init_db
 
 # Funciones de cada botón
+
+# Método que escanea las cabeceras HTTP de una URL
 def escanear_cabeceras():
-    # Ventana secundaria con diseño más limpio
+    # Ventana secundaria 
     ventana_secundaria = ttk.Toplevel(title="Escaneo de Cabeceras")
     ventana_secundaria.geometry("700x540")
     ventana_secundaria.resizable(False, False)
 
-    # Título de sección
+    # Título de la ventana
     ttk.Label(
         ventana_secundaria,
         text="Escaneo de Cabeceras HTTP",
         font=("Segoe UI", 16, "bold")
     ).pack(pady=(20, 10))
 
-    # Contenedor de entrada y botón
     frame_url = ttk.Frame(ventana_secundaria)
     frame_url.pack(pady=10)
 
@@ -30,6 +31,7 @@ def escanear_cabeceras():
     entrada_url = ttk.Entry(frame_url, width=70)
     entrada_url.pack(padx=10, pady=(0, 10))
 
+    # Método que ejecuta el escaneo de cabeceras
     def ejecutar_escaneo():
         url = entrada_url.get()
         if not url:
@@ -55,12 +57,13 @@ def escanear_cabeceras():
     # Botón para escanear
     ttk.Button(frame_url, text="Escanear", width=20, command=ejecutar_escaneo, bootstyle="primary").pack(pady=5)
 
-    # Área de resultados
+    # Muestra los resultados
     area_resultados = ttk.Text(ventana_secundaria, height=20)
     area_resultados.pack(padx=10, pady=10, fill="both", expand=True)
 
+# Método que escanea formularios HTML de una URL
 def escanear_formularios():
-    # Ventana secundaria con diseño profesional
+    # Ventana secundaria 
     ventana_secundaria = ttk.Toplevel(title="Escaneo de Formularios")
     ventana_secundaria.geometry("700x540")
     ventana_secundaria.resizable(False, False)
@@ -72,7 +75,6 @@ def escanear_formularios():
         font=("Segoe UI", 16, "bold")
     ).pack(pady=(20, 10))
 
-    # Contenedor para el campo de entrada y botón
     frame_url = ttk.Frame(ventana_secundaria)
     frame_url.pack(pady=10)
 
@@ -80,6 +82,7 @@ def escanear_formularios():
     entrada_url = ttk.Entry(frame_url, width=70)
     entrada_url.pack(padx=10, pady=(0, 10))
 
+    # Método que ejecuta el escaneo de formularios
     def ejecutar_escaneo():
         url = entrada_url.get()
         if not url:
@@ -101,27 +104,27 @@ def escanear_formularios():
             sys.stdout = sys.__stdout__
             area_resultados.insert("end", f"Error durante el escaneo: {e}")
 
-    # Botón para lanzar el escaneo
+    # Botón para escanear
     ttk.Button(frame_url, text="Escanear", width=20, command=ejecutar_escaneo, bootstyle="primary").pack(pady=5)
 
-    # Área de resultados
+    # Muestra los resultados
     area_resultados = ttk.Text(ventana_secundaria, height=20)
     area_resultados.pack(padx=10, pady=10, fill="both", expand=True)
 
+# Método que escanea cabeceras y formularios de una URL
 def escaneo_completo():
-    # Ventana secundaria con diseño mejorado
+    # Ventana secundaria
     ventana_secundaria = ttk.Toplevel(title="Escaneo Completo")
     ventana_secundaria.geometry("750x600")
     ventana_secundaria.resizable(False, False)
 
-    # Título superior
+    # Título de la ventana
     ttk.Label(
         ventana_secundaria,
         text="Escaneo Completo (Cabeceras + Formularios)",
         font=("Segoe UI", 16, "bold")
     ).pack(pady=(20, 10))
 
-    # Contenedor para la entrada y el botón
     frame_url = ttk.Frame(ventana_secundaria)
     frame_url.pack(pady=10)
 
@@ -129,6 +132,7 @@ def escaneo_completo():
     entrada_url = ttk.Entry(frame_url, width=70)
     entrada_url.pack(padx=10, pady=(0, 10))
 
+    # Método que ejecuta el escaneo completo
     def ejecutar_escaneo_completo():
         url = entrada_url.get()
         if not url:
@@ -160,6 +164,7 @@ def escaneo_completo():
                 for c in cabeceras["Cabeceras Ausentes"]:
                     print(f"  - {c}")
 
+            # Escaneo de formularios
             print("\n=== ESCANEO DE FORMULARIOS ===")
             escanear_formularios_funcion(url)
 
@@ -171,33 +176,34 @@ def escaneo_completo():
             sys.stdout = sys.__stdout__
             area_resultados.insert("end", f"Error durante el escaneo completo: {e}")
 
-    # Botón de acción
+    # Botón para escanear
     ttk.Button(frame_url, text="Escanear Todo", width=20, command=ejecutar_escaneo_completo, bootstyle="primary").pack(pady=5)
 
-    # Área de resultados
+    # Muestra los resultados
     area_resultados = ttk.Text(ventana_secundaria, height=25)
     area_resultados.pack(padx=10, pady=10, fill="both", expand=True)
 
+# Método que muestra los resultados de los escaneos
 def ver_resultados():
     ventana_secundaria = ttk.Toplevel(title="Historial de Escaneos por URL")
     ventana_secundaria.geometry("850x600")
     ventana_secundaria.resizable(False, False)
 
-    # Título visual principal
+    # Título de la ventana
     ttk.Label(
         ventana_secundaria,
         text="Historial de Escaneos",
         font=("Segoe UI", 16, "bold")
     ).pack(pady=(20, 10))
 
-    # Contenedor del área de resultados
+    # Muestra los resultados
     frame_contenido = ttk.Frame(ventana_secundaria)
     frame_contenido.pack(fill="both", expand=True, padx=10, pady=(0, 10))
 
     area_resultados = ttk.Text(frame_contenido, height=30, font=("Segoe UI", 10))
     area_resultados.pack(fill="both", expand=True)
 
-    # Acceso a base de datos
+    # Accede a la base de datos
     conexion = sqlite3.connect("db/scanner.db")
     cursor = conexion.cursor()
 
@@ -224,7 +230,7 @@ def ver_resultados():
             area_resultados.insert("end", f"Nivel de riesgo: {fila[1]}\n")
             area_resultados.insert("end", f"Cabeceras ausentes: {fila[2]}\n")
 
-        # Formularios
+        # Escaneo de formularios
         cursor.execute("""
             SELECT metodo, accion, campo_nombre, campo_tipo, potencialmente_vulnerable
             FROM formularios_detectados WHERE url = ?
@@ -252,6 +258,7 @@ def ver_resultados():
 
     conexion.close()
 
+# Método que exporta los resultados a un archivo JSON o CSV
 def exportar_resultados():
     ventana_exportar = ttk.Toplevel(title="Exportar Resultados")
     ventana_exportar.geometry("500x250")
@@ -266,12 +273,12 @@ def exportar_resultados():
     frame = ttk.Frame(ventana_exportar)
     frame.pack(pady=10, padx=10, fill="x")
 
-    # Campo de ruta
+    # Label para introducir el nombre del archivo
     ttk.Label(frame, text="Nombre del archivo (sin extensión):").pack(anchor="w")
     entrada_ruta = ttk.Entry(frame, width=50)
     entrada_ruta.pack(pady=5)
 
-    # Formato de exportación
+    # Elección del formato de exportación
     ttk.Label(frame, text="Selecciona formato de exportación:").pack(anchor="w", pady=(10, 0))
     formato_var = ttk.StringVar(value="json")
     opciones = ttk.Frame(frame)
@@ -279,6 +286,7 @@ def exportar_resultados():
     ttk.Radiobutton(opciones, text="JSON", variable=formato_var, value="json").pack(side="left", padx=5)
     ttk.Radiobutton(opciones, text="CSV", variable=formato_var, value="csv").pack(side="left", padx=5)
 
+    # Método que exporta los resultados
     def ejecutar_exportacion():
         nombre = entrada_ruta.get().strip()
         if not nombre:
@@ -300,6 +308,7 @@ def exportar_resultados():
 
     ttk.Button(ventana_exportar, text="Exportar", width=20, command=ejecutar_exportacion, bootstyle="primary").pack(pady=10)
 
+# Método que abre la carpeta donde se ha guardado el archivo exportado, según el sistema operativo
 def abrir_carpeta_contenedora(ruta_archivo):
     ruta_absoluta = os.path.abspath(ruta_archivo)
     carpeta = os.path.dirname(ruta_absoluta)
@@ -316,17 +325,21 @@ def abrir_carpeta_contenedora(ruta_archivo):
         messagebox.showwarning("Error al abrir carpeta", f"No se pudo abrir la carpeta:\n{carpeta}\n\n{e}")
 
 
+# Crea la base de datos si no existe
+init_db()
+
 # Interfaz gráfica principal
-# Ventana principal con tema moderno
+# Ventana principal 
 ventana = ttk.Window(themename="flatly")
 ventana.title("Escáner de Vulnerabilidades Web")
 ventana.geometry("640x460")
 ventana.resizable(False, False)
 
-# Frame superior para el título
+# Espacio para título
 header = ttk.Frame(ventana)
 header.pack(fill="x", pady=(20, 10))
 
+# Título de la ventana
 ttk.Label(
     header,
     text="Escáner de Vulnerabilidades Web",
@@ -334,7 +347,7 @@ ttk.Label(
     anchor="center"
 ).pack()
 
-# Frame central para los botones, centrado horizontalmente
+# Espacio para botones
 frame_botones = ttk.Frame(ventana)
 frame_botones.pack(pady=30)
 
@@ -347,7 +360,7 @@ botones = [
     ("Exportar Resultados", exportar_resultados),
 ]
 
-# Añadir botones estilizados
+# Añade los botones a la ventana 
 for texto, accion in botones:
     ttk.Button(
         frame_botones,
@@ -357,7 +370,7 @@ for texto, accion in botones:
         bootstyle="primary"
     ).pack(pady=6)
 
-# Pie de página opcional
+# Pie de página 
 footer = ttk.Label(
     ventana,
     text="2025 - Mauro Purriños Vento",
@@ -366,5 +379,5 @@ footer = ttk.Label(
 )
 footer.pack(side="bottom", pady=(10, 5))
 
-# Ejecutar la interfaz
+# Ejecuta la interfaz
 ventana.mainloop()
