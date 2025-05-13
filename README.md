@@ -20,7 +20,6 @@ Este proyecto es una aplicación de escritorio desarrollada en Python que permit
 
 ## Estructura del proyecto
 <pre> 
-```
 utils/
 ├── scanner.py         # Lógica de escaneo de cabeceras y formularios
 ├── db.py              # Acceso y gestión de la base de datos
@@ -31,10 +30,7 @@ db/
 main_gui.py            # Interfaz gráfica principal
 README.md              # Este archivo
 requirements.txt       # Dependencias del proyecto
-```
-
  </pre>
-
 ## Requisitos
 
 Instala las dependencias necesarias con:
