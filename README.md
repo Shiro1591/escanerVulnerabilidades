@@ -19,7 +19,7 @@ Este proyecto es una aplicación de escritorio desarrollada en Python que permit
 - **requests** y **BeautifulSoup** para el análisis web
 
 ## Estructura del proyecto
-<pre> utils/
+<pre>utils/
 ├── scanner.py         # Lógica de escaneo de cabeceras y formularios
 ├── db.py              # Acceso y gestión de la base de datos
 
