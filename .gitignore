@@ -1,7 +1,22 @@
+# Bytecode
 __pycache__/
-*.pyc
-*.db
-db/
-.env
-.DS_Store
+*.py[cod]
+
+# Bases de datos locales
+db/*.db
+
+# Archivos temporales
 *.log
+*.tmp
+
+# Exportaciones
+*.json
+*.csv
+
+# Entornos virtuales
+venv/
+.env/
+
+# Archivos del sistema
+.DS_Store
+Thumbs.db

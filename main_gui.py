@@ -3,10 +3,10 @@ import sqlite3, os, platform, subprocess
 import ttkbootstrap as ttk
 from ttkbootstrap.constants import *
 from tkinter import messagebox
-from utils.scanner import escanear_cabeceras as escanear_cabeceras_funcion
-from utils.scanner import escanear_formularios as escanear_formularios_funcion
-from utils.db import guardar_resultado_escaneo, exportar_a_json, exportar_a_csv
+from utils.scanner import escanear_cabeceras as escanear_cabeceras_funcion, escanear_formularios as escanear_formularios_funcion, simular_ataques as ejecutar_ataques
+from utils.db import guardar_resultado_escaneo, exportar_a_json, exportar_a_csv, exportar_ataques_a_json, exportar_ataques_a_csv
 from db.init_db import init_db
+
 
 # Funciones de cada botón
 
@@ -261,7 +261,7 @@ def ver_resultados():
 # Método que exporta los resultados a un archivo JSON o CSV
 def exportar_resultados():
     ventana_exportar = ttk.Toplevel(title="Exportar Resultados")
-    ventana_exportar.geometry("500x250")
+    ventana_exportar.geometry("500x300")
     ventana_exportar.resizable(False, False)
 
     ttk.Label(
@@ -273,37 +273,45 @@ def exportar_resultados():
     frame = ttk.Frame(ventana_exportar)
     frame.pack(pady=10, padx=10, fill="x")
 
-    # Label para introducir el nombre del archivo
+    # Nombre del archivo
     ttk.Label(frame, text="Nombre del archivo (sin extensión):").pack(anchor="w")
     entrada_ruta = ttk.Entry(frame, width=50)
     entrada_ruta.pack(pady=5)
 
-    # Elección del formato de exportación
+    # Selección de qué exportar
+    ttk.Label(frame, text="¿Qué deseas exportar?").pack(anchor="w", pady=(10, 0))
+    tipo_exportacion = ttk.StringVar(value="escaneos")
+    opciones_tipo = ttk.Frame(frame)
+    opciones_tipo.pack(anchor="w", pady=5)
+    ttk.Radiobutton(opciones_tipo, text="Resultados de escaneos", variable=tipo_exportacion, value="escaneos").pack(side="left", padx=5)
+    ttk.Radiobutton(opciones_tipo, text="Ataques detectados", variable=tipo_exportacion, value="ataques").pack(side="left", padx=5)
+
+    # Formato de exportación
     ttk.Label(frame, text="Selecciona formato de exportación:").pack(anchor="w", pady=(10, 0))
     formato_var = ttk.StringVar(value="json")
-    opciones = ttk.Frame(frame)
-    opciones.pack(anchor="w", pady=5)
-    ttk.Radiobutton(opciones, text="JSON", variable=formato_var, value="json").pack(side="left", padx=5)
-    ttk.Radiobutton(opciones, text="CSV", variable=formato_var, value="csv").pack(side="left", padx=5)
+    opciones_formato = ttk.Frame(frame)
+    opciones_formato.pack(anchor="w", pady=5)
+    ttk.Radiobutton(opciones_formato, text="JSON", variable=formato_var, value="json").pack(side="left", padx=5)
+    ttk.Radiobutton(opciones_formato, text="CSV", variable=formato_var, value="csv").pack(side="left", padx=5)
 
-    # Método que exporta los resultados
     def ejecutar_exportacion():
         nombre = entrada_ruta.get().strip()
         if not nombre:
             messagebox.showwarning("Campo vacío", "Debes introducir un nombre de archivo.")
             return
 
+        tipo = tipo_exportacion.get()
         formato = formato_var.get()
         ruta = f"{nombre}.{formato}"
 
-        if formato == "json":
-            archivo = exportar_a_json(ruta)
+        # Exporta el formato seleccionado
+        if tipo == "escaneos":
+            archivo = exportar_a_json(ruta) if formato == "json" else exportar_a_csv(ruta)
         else:
-            archivo = exportar_a_csv(ruta)
+            archivo = exportar_ataques_a_json(ruta) if formato == "json" else exportar_ataques_a_csv(ruta)
 
         abrir_carpeta_contenedora(archivo)
         messagebox.showinfo("Exportación completada", f"Archivo guardado como:\n{archivo}")
-
         ventana_exportar.destroy()
 
     ttk.Button(ventana_exportar, text="Exportar", width=20, command=ejecutar_exportacion, bootstyle="primary").pack(pady=10)
@@ -324,13 +332,135 @@ def abrir_carpeta_contenedora(ruta_archivo):
     except Exception as e:
         messagebox.showwarning("Error al abrir carpeta", f"No se pudo abrir la carpeta:\n{carpeta}\n\n{e}")
 
+# Método que simula ataques en formularios con payloads
+def simular_ataque():
+    ventana_secundaria = ttk.Toplevel(title="Simular Ataque (XSS / SQLi)")
+    ventana_secundaria.geometry("700x540")
+    ventana_secundaria.resizable(False, False)
+
+    # Título de la ventana
+    ttk.Label(
+        ventana_secundaria,
+        text="Simulación de Ataques en Formularios",
+        font=("Segoe UI", 16, "bold")
+    ).pack(pady=(20, 10))
+
+    frame_url = ttk.Frame(ventana_secundaria)
+    frame_url.pack(pady=10)
+
+    ttk.Label(frame_url, text="Introduce una URL escaneada previamente:", font=("Segoe UI", 11)).pack(anchor="w", padx=10)
+    entrada_url = ttk.Entry(frame_url, width=70)
+    entrada_url.pack(padx=10, pady=(0, 10))
+
+    # Selector de tipo de ataque
+    ttk.Label(frame_url, text="Tipo de ataque a simular:", font=("Segoe UI", 11)).pack(anchor="w", padx=10)
+    tipo_var = ttk.StringVar(value="Ambos")
+
+    frame_tipo = ttk.Frame(frame_url)
+    frame_tipo.pack(anchor="w", padx=10, pady=5)
+
+    ttk.Radiobutton(frame_tipo, text="Ambos", variable=tipo_var, value="Ambos").pack(side="left", padx=5)
+    ttk.Radiobutton(frame_tipo, text="Solo XSS", variable=tipo_var, value="XSS").pack(side="left", padx=5)
+    ttk.Radiobutton(frame_tipo, text="Solo SQLi", variable=tipo_var, value="SQLi").pack(side="left", padx=5)      
+       
+    # Área para mostrar resultados
+    area_resultados = ttk.Text(ventana_secundaria, height=20)
+    area_resultados.pack(padx=10, pady=10, fill="both", expand=True)
+
+    # Método que ejecuta la simulación
+    def ejecutar_simulacion():
+        url = entrada_url.get()
+        if not url:
+            messagebox.showwarning("Campo vacío", "Por favor, introduce una URL.")
+            return
+
+        area_resultados.delete("1.0", "end")
+
+        try:
+            import io
+            import sys
+            buffer = io.StringIO()
+            sys.stdout = buffer
+            tipo = tipo_var.get()
+            ejecutar_ataques(url, tipo)
+            sys.stdout = sys.__stdout__
+            resultado = buffer.getvalue()
+            area_resultados.insert("end", resultado)
+        except Exception as e:
+            sys.stdout = sys.__stdout__
+            area_resultados.insert("end", f"Error durante la simulación: {e}")
+
+    ttk.Button(frame_url, text="Simular Ataque", width=20, command=ejecutar_simulacion).pack(pady=5)
+
+# Método que muestra los ataques detectados guardados en la base de datos
+def ver_ataques_detectados():
+    ventana_secundaria = ttk.Toplevel(title="Ataques Detectados")
+    ventana_secundaria.geometry("850x600")
+    ventana_secundaria.resizable(False, False)
+
+    # Título
+    ttk.Label(
+        ventana_secundaria,
+        text="Historial de Ataques Detectados",
+        font=("Segoe UI", 16, "bold")
+    ).pack(pady=(20, 10))
+
+    frame_contenido = ttk.Frame(ventana_secundaria)
+    frame_contenido.pack(fill="both", expand=True, padx=10, pady=(0, 10))
+
+    area_resultados = ttk.Text(frame_contenido, height=30, font=("Segoe UI", 10))
+    area_resultados.pack(fill="both", expand=True)
+
+    # Consulta base de datos
+    conexion = sqlite3.connect("db/scanner.db")
+    cursor = conexion.cursor()
+
+    cursor.execute("""
+        SELECT url, metodo, accion, campo_nombre, tipo_payload, payload, evidencia, fecha
+        FROM ataques_detectados
+        ORDER BY url ASC, fecha DESC
+    """)
+    ataques = cursor.fetchall()
+    conexion.close()
+
+    if not ataques:
+        area_resultados.insert("end", "No se han detectado ataques aún.")
+        return
+
+    # Agrupa por URL
+    agrupados = {}
+    for fila in ataques:
+        url = fila[0]
+        if url not in agrupados:
+            agrupados[url] = []
+        agrupados[url].append(fila)
+
+    # Muestra agrupado
+    for url, registros in agrupados.items():
+        area_resultados.insert("end", f"\n=== URL: {url} ===\n")
+        for fila in registros:
+            _, metodo, accion, campo, tipo, payload, evidencia, fecha = fila
+            tag = "xss" if tipo.lower() == "xss" else "sqli" if tipo.lower() == "sqli" else "info"
+
+            area_resultados.insert("end", f"[{fecha}]\n", tag)
+            area_resultados.insert("end", f"- Método: {metodo}\n", tag)
+            area_resultados.insert("end", f"- Acción: {accion}\n", tag)
+            area_resultados.insert("end", f"- Campo: {campo}\n", tag)
+            area_resultados.insert("end", f"- Tipo: {tipo}\n", tag)
+            area_resultados.insert("end", f"- Payload: {payload}\n", tag)
+            area_resultados.insert("end", f"- Evidencia: {evidencia}\n")
+            area_resultados.insert("end", "-" * 60 + "\n", "info")
 
 # Crea la base de datos si no existe
 init_db()
 
+
+
+
+
 # Interfaz gráfica principal
 # Ventana principal 
-ventana = ttk.Window(themename="flatly")
+ventana = ttk.Window(themename="darkly")
 ventana.title("Escáner de Vulnerabilidades Web")
 ventana.geometry("640x460")
 ventana.resizable(False, False)
@@ -357,7 +487,9 @@ botones = [
     ("Escanear Formularios", escanear_formularios),
     ("Escaneo Completo", escaneo_completo),
     ("Ver Resultados", ver_resultados),
-    ("Exportar Resultados", exportar_resultados),
+    ("Simular ataque", simular_ataque),
+    ("Ver Ataques Detectados", ver_ataques_detectados),
+    ("Exportar Resultados", exportar_resultados)
 ]
 
 # Añade los botones a la ventana 
@@ -370,14 +502,36 @@ for texto, accion in botones:
         bootstyle="primary"
     ).pack(pady=6)
 
+# Método que añade y muestra un contador de ataques detectados
+def contar_ataques():
+    try:
+        conexion = sqlite3.connect("db/scanner.db")
+        cursor = conexion.cursor()
+        cursor.execute("SELECT COUNT(*) FROM ataques_detectados")
+        cantidad = cursor.fetchone()[0]
+        conexion.close()
+        return cantidad
+    except:
+        return 0
+
+# Contador de ataques detectadoss
+contador = contar_ataques()
+ttk.Label(
+    ventana,
+    text=f"Ataques detectados: {contador}",
+    font=("Segoe UI", 10),
+    anchor="center"
+).pack(side= "top", pady=(0, 0))
+
+
 # Pie de página 
 footer = ttk.Label(
     ventana,
     text="2025 - Mauro Purriños Vento",
-    font=("Segoe UI", 9),
+    font=("Segoe UI", 8),
     anchor="center"
 )
-footer.pack(side="bottom", pady=(10, 5))
+footer.pack(side="bottom", pady=(0, 0))
 
 # Ejecuta la interfaz
 ventana.mainloop()

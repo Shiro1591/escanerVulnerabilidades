@@ -2,6 +2,26 @@
 import sqlite3, os, json, csv
 from datetime import datetime
 
+# Método que obtiene la lista de cabeceras de seguridad desde la base de datos
+def obtener_cabeceras_seguridad():
+    conexion = sqlite3.connect("db/scanner.db")
+    cursor = conexion.cursor()
+
+    cursor.execute("SELECT nombre_cabecera FROM cabeceras_seguridad")
+    cabeceras = [fila[0] for fila in cursor.fetchall()]
+
+    conexion.close()
+    return cabeceras
+
+# Método que obtiene los patrones de errores SQL desde la base de datos
+def obtener_errores_sql():
+    conexion = sqlite3.connect("db/scanner.db")
+    cursor = conexion.cursor()
+    cursor.execute("SELECT patron FROM errores_sql")
+    errores = [fila[0].lower() for fila in cursor.fetchall()]
+    conexion.close()
+    return errores
+
 # Método que guarda los resultados de un escaneo de cabeceras en la base de datos
 def guardar_resultado_escaneo(resultado):
     conexion = sqlite3.connect("db/scanner.db")
@@ -59,9 +79,24 @@ def guardar_formulario(url, metodo, accion, campo_nombre, campo_tipo, potencial)
     conexion.commit()
     conexion.close()
 
+# Método que guarda un ataque detectado en la base de datos
+def guardar_ataque_detectado(url, metodo, accion, campo_nombre, tipo_payload, payload, evidencia):
+    conexion = sqlite3.connect("db/scanner.db")
+    cursor = conexion.cursor()
+
+    fecha = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    cursor.execute("""
+        INSERT INTO ataques_detectados (url, metodo, accion, campo_nombre, tipo_payload, payload, evidencia, fecha)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    """, (url, metodo, accion, campo_nombre, tipo_payload, payload, evidencia, fecha))
+
+    conexion.commit()
+    conexion.close()
+
 # Método que define la ruta para guardar los documentos de vulnerabilidades
 def ruta_documentos_vulnerabilidades(nombre_archivo):
-    carpeta = os.path.join(os.path.expanduser("~"), "Documents", "Datos vulnerabilidades")
+    carpeta = os.path.join(os.path.expanduser("~"), "Documents", "Datos escaner vulnerabilidades")
     os.makedirs(carpeta, exist_ok=True)
     return os.path.join(carpeta, nombre_archivo)
 
@@ -138,5 +173,56 @@ def exportar_a_csv(nombre_archivo="export_resultados.csv"):
 
     conexion.close()
     return nombre_archivo
+
+# Método que exporta ataques detectados a JSON
+def exportar_ataques_a_json(nombre_archivo="export_ataques.json"):
+    conexion = sqlite3.connect("db/scanner.db")
+    cursor = conexion.cursor()
+
+    cursor.execute("SELECT url, metodo, accion, campo_nombre, tipo_payload, payload, evidencia, fecha FROM ataques_detectados")
+    ataques = cursor.fetchall()
+    conexion.close()
+
+    datos = [
+        {
+            "url": a[0],
+            "metodo": a[1],
+            "accion": a[2],
+            "campo": a[3],
+            "tipo": a[4],
+            "payload": a[5],
+            "evidencia": a[6],
+            "fecha": a[7]
+        }
+        for a in ataques
+    ]
+
+    ruta = ruta_documentos_vulnerabilidades(nombre_archivo)
+    with open(ruta, "w", encoding="utf-8") as f:
+        json.dump(datos, f, indent=4, ensure_ascii=False)
+
+    return ruta
+
+# Método que exporta ataques detectados a CSV
+def exportar_ataques_a_csv(nombre_archivo="export_ataques.csv"):
+    conexion = sqlite3.connect("db/scanner.db")
+    cursor = conexion.cursor()
+
+    cursor.execute("SELECT url, metodo, accion, campo_nombre, tipo_payload, payload, evidencia, fecha FROM ataques_detectados")
+    ataques = cursor.fetchall()
+    conexion.close()
+
+    ruta = ruta_documentos_vulnerabilidades(nombre_archivo)
+    with open(ruta, mode="w", newline='', encoding="utf-8") as f:
+        writer = csv.writer(f)
+        writer.writerow(["URL", "Método", "Acción", "Campo", "Tipo", "Payload", "Evidencia", "Fecha"])
+        for fila in ataques:
+            writer.writerow(fila)
+
+    return ruta
+
+
+
+
 
 
