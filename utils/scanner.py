@@ -136,14 +136,20 @@ def simular_ataques(url, tipo="Ambos"):
 
             if cadena.lower() in contenido:
                 vulnerabilidad = True
-                print(f"[!] POSIBLE VULNERABILIDAD ({tipo}) por reflejo en campo '{campo_nombre}' con payload: {cadena}")
-                print(f"    Formulario -> Método: {metodo}, Acción: {accion}")
+                print("—" * 50)
+                print(f"[!] POSIBLE VULNERABILIDAD DETECTADA ({tipo})")
+                print(f"- Campo afectado: {campo_nombre}")
+                print(f"- Payload usado: {cadena}")
+                print(f"- Método: {metodo}")
+                print(f"- Acción: {accion}\n")
+
 
             for error in errores_sql:
                 if error in contenido:
                     vulnerabilidad = True
                     print(f"[!] ERROR SQL detectado en respuesta -> posible SQLi")
-                    print(f"    Error: {error}")
+                    print(f"- Error detectado: {error}\n")
+
 
             evidencias = []
             if cadena.lower() in contenido:
@@ -162,7 +168,7 @@ def simular_ataques(url, tipo="Ambos"):
         except Exception as e:
             print(f"[X] Error al enviar payload a {url_destino}: {e}")
 
-        conexion.close()
+    conexion.close()
 
 
     try:
