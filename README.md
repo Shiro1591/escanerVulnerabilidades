@@ -36,7 +36,7 @@ README.md # Este archivo
 Instala las dependencias necesarias con:
 
 ```bash
-pip install -r requirements.txt
+py -m pip install -r requirements.txt
 ```
 Si no tienes "ttkbootstrap" instalalo con:
 ```
