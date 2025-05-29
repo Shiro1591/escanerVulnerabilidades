@@ -11,7 +11,7 @@ Este proyecto es una aplicación de escritorio desarrollada en Python que permit
 - **Historial de escaneos**: muestra los resultados anteriores por URL, incluyendo cabeceras, formularios y ataques detectados.
 - **Exportación**: permite guardar los resultados en formato JSON o CSV (cabeceras, formularios y ataques).
 - **Contador en la interfaz**: muestra cuántos ataques han sido detectados en total.
-- **Interfaz gráfica **: construida con `ttkbootstrap`
+- **Interfaz gráfica**: construida con `ttkbootstrap`
 
 ## Tecnologías utilizadas
 
@@ -22,21 +22,22 @@ Este proyecto es una aplicación de escritorio desarrollada en Python que permit
 - **json**, **csv**, **os**, **platform**, etc.
 
 ## Estructura del proyecto
-
-📁 utils/
+```
+utils/
 ├──── scanner.py # Lógica de escaneo de cabeceras y formularios
 └──── db.py # Acceso y gestión de la base de datos
-📁 db/
+db/
 └──── scanner.db # Base de datos SQLite (se crea al ejecutar)
 main.py # Interfaz gráfica principal
 README.md # Este archivo
-
+```
 ## Requisitos
 
 Instala las dependencias necesarias con:
 
 ```bash
 pip install -r requirements.txt
-
+```
 Si no tienes "ttkbootstrap" instalalo con:
+```
 pip install ttkbootstrap
