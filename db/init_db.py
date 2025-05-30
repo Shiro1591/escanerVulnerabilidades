@@ -44,9 +44,11 @@ def init_db():
             accion TEXT,
             campo_nombre TEXT,
             campo_tipo TEXT,
-            potencialmente_vulnerable INTEGER
+            potencialmente_vulnerable INTEGER,
+            id_resultado INTEGER,
+            FOREIGN KEY (id_resultado) REFERENCES resultados_escaneos(id)
         );
-                         
+
         CREATE TABLE IF NOT EXISTS ataques_detectados (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             url TEXT NOT NULL,
@@ -56,8 +58,13 @@ def init_db():
             tipo_payload TEXT,
             payload TEXT,
             evidencia TEXT,
-            fecha TEXT
+            fecha TEXT,
+            id_resultado INTEGER,
+            id_payload INTEGER,
+            FOREIGN KEY (id_resultado) REFERENCES resultados_escaneos(id),
+            FOREIGN KEY (id_payload) REFERENCES payloads(id)
         );
+
                          
         CREATE TABLE IF NOT EXISTS errores_sql (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
