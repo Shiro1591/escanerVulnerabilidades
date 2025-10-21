@@ -28,7 +28,7 @@ utils/
 └──── db.py # Acceso y gestión de la base de datos
 db/
 └──── scanner.db # Base de datos SQLite (se crea al ejecutar)
-main.py # Interfaz gráfica principal
+main_gui.py # Interfaz gráfica principal
 README.md # Este archivo
 ```
 ## Requisitos
