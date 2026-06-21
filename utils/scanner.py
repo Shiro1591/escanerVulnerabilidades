@@ -98,7 +98,7 @@ def simular_ataques(url, tipo="Ambos"):
 
     # Recupera formularios potencialmente vulnerables
     cursor.execute("""
-        SELECT metodo, accion, campo_nombre, campo_tipo
+        SELECT metodo, accion, campo_nombre
         FROM formularios_detectados
         WHERE url = ? AND potencialmente_vulnerable = 1
     """, (url,))
@@ -117,14 +117,16 @@ def simular_ataques(url, tipo="Ambos"):
     payloads = cursor.fetchall()
 
     errores_sql = obtener_errores_sql()
+    campos_vulnerables = set()
 
-    for metodo, accion, campo_nombre, campo_tipo in formularios:
+    for metodo, accion, campo_nombre in formularios:
         if not campo_nombre:
             continue
 
+        url_destino = urljoin(url, accion)
+
         for tipo_payload, cadena in payloads:
             datos = {campo_nombre: cadena}
-            url_destino = urljoin(url, accion)
 
             try:
                 if metodo.upper() == "POST":
@@ -134,39 +136,37 @@ def simular_ataques(url, tipo="Ambos"):
 
                 contenido = respuesta.text.lower()
                 vulnerabilidad = False
+                evidencias = []
 
                 if cadena.lower() in contenido:
                     vulnerabilidad = True
-                    print("—" * 50)
+                    evidencias.append("Reflejo en respuesta")
+                    print("-" * 50)
                     print(f"[!] POSIBLE VULNERABILIDAD DETECTADA ({tipo_payload})")
                     print(f"- Campo afectado: {campo_nombre}")
                     print(f"- Payload usado: {cadena}")
                     print(f"- Método: {metodo}")
                     print(f"- Acción: {accion}\n")
 
-
-                for error in errores_sql:
-                    if error in contenido:
-                        vulnerabilidad = True
-                        print(f"[!] ERROR SQL detectado en respuesta -> posible SQLi")
-                        print(f"- Error detectado: {error}\n")
-
-
-                evidencias = []
-                if cadena.lower() in contenido:
-                    evidencias.append("Reflejo en respuesta")
-                for error in errores_sql:
-                    if error in contenido:
-                        evidencias.append("Error SQL detectado")
-
-                evidencia_final = ", ".join(evidencias) if evidencias else "Sin evidencia directa"
-
+                if tipo_payload == "SQLi":
+                    for error in errores_sql:
+                        if error in contenido:
+                            vulnerabilidad = True
+                            evidencias.append("Error SQL detectado")
+                            print(f"[!] ERROR SQL detectado en respuesta -> posible SQLi")
+                            print(f"- Error detectado: {error}\n")
 
                 if vulnerabilidad:
-                    guardar_ataque_detectado(url, metodo, accion, campo_nombre, tipo_payload, cadena, evidencia_final)
+                    guardar_ataque_detectado(url, metodo, accion, campo_nombre, tipo_payload, cadena, ", ".join(evidencias))
+                    campos_vulnerables.add(campo_nombre)
                     print()
 
             except Exception as e:
                 print(f"[X] Error al enviar payload a {url_destino}: {e}")
 
     conexion.close()
+
+    if not campos_vulnerables:
+        print("Simulación completada: no se detectaron vulnerabilidades con los payloads probados.")
+    else:
+        print(f"Simulación completada: {len(campos_vulnerables)} campo(s) vulnerable(s) detectado(s). Revisa 'Ver Ataques Detectados' para más detalles.")
