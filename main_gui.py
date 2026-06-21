@@ -5,7 +5,7 @@ from ttkbootstrap.constants import *
 from tkinter import messagebox
 from utils.scanner import escanear_cabeceras as escanear_cabeceras_funcion, escanear_formularios as escanear_formularios_funcion, simular_ataques as ejecutar_ataques
 from utils.db import guardar_resultado_escaneo, exportar_a_json, exportar_a_csv, exportar_ataques_a_json, exportar_ataques_a_csv
-from db.init_db import init_db
+from db.init_db import init_db, DB_PATH
 
 
 # Funciones de cada botón
@@ -204,7 +204,7 @@ def ver_resultados():
     area_resultados.pack(fill="both", expand=True)
 
     # Accede a la base de datos
-    conexion = sqlite3.connect("db/scanner.db")
+    conexion = sqlite3.connect(DB_PATH)
     cursor = conexion.cursor()
 
     cursor.execute("SELECT DISTINCT url FROM resultados_escaneos")
@@ -412,7 +412,7 @@ def ver_ataques_detectados():
     area_resultados.pack(fill="both", expand=True)
 
     # Consulta base de datos
-    conexion = sqlite3.connect("db/scanner.db")
+    conexion = sqlite3.connect(DB_PATH)
     cursor = conexion.cursor()
 
     cursor.execute("""
@@ -505,13 +505,13 @@ for texto, accion in botones:
 # Método que añade y muestra un contador de ataques detectados
 def contar_ataques():
     try:
-        conexion = sqlite3.connect("db/scanner.db")
+        conexion = sqlite3.connect(DB_PATH)
         cursor = conexion.cursor()
         cursor.execute("SELECT COUNT(*) FROM ataques_detectados")
         cantidad = cursor.fetchone()[0]
         conexion.close()
         return cantidad
-    except:
+    except Exception:
         return 0
 
 # Contador de ataques detectadoss

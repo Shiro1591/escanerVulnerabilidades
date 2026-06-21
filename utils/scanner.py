@@ -1,7 +1,8 @@
 # Importaciones
 import requests, sqlite3
 from urllib.parse import urljoin
-from bs4 import BeautifulSoup  
+from bs4 import BeautifulSoup
+from db.init_db import DB_PATH
 from utils.db import guardar_formulario, obtener_cabeceras_seguridad, guardar_ataque_detectado, obtener_errores_sql
 
 
@@ -90,7 +91,7 @@ def escanear_formularios(url):
 
 # Método que simula ataques usando los payloads sobre una URL concreta
 def simular_ataques(url, tipo="Ambos"):
-    conexion = sqlite3.connect("db/scanner.db")
+    conexion = sqlite3.connect(DB_PATH)
     cursor = conexion.cursor()
 
     print(f"\n[Simulación de ataques en {url}]\n")
@@ -115,77 +116,57 @@ def simular_ataques(url, tipo="Ambos"):
         cursor.execute("SELECT tipo, cadena FROM payloads WHERE tipo = ?", (tipo,))
     payloads = cursor.fetchall()
 
+    errores_sql = obtener_errores_sql()
+
     for metodo, accion, campo_nombre, campo_tipo in formularios:
         if not campo_nombre:
-            continue  
+            continue
 
-    errores_sql = obtener_errores_sql()  
+        for tipo_payload, cadena in payloads:
+            datos = {campo_nombre: cadena}
+            url_destino = urljoin(url, accion)
 
-    for tipo, cadena in payloads:
-        datos = {campo_nombre: cadena}
-        url_destino = urljoin(url, accion)
+            try:
+                if metodo.upper() == "POST":
+                    respuesta = requests.post(url_destino, data=datos, timeout=5)
+                else:
+                    respuesta = requests.get(url_destino, params=datos, timeout=5)
 
-        try:
-            if metodo.upper() == "POST":
-                respuesta = requests.post(url_destino, data=datos, timeout=5)
-            else:
-                respuesta = requests.get(url_destino, params=datos, timeout=5)
+                contenido = respuesta.text.lower()
+                vulnerabilidad = False
 
-            contenido = respuesta.text.lower()
-            vulnerabilidad = False
-
-            if cadena.lower() in contenido:
-                vulnerabilidad = True
-                print("—" * 50)
-                print(f"[!] POSIBLE VULNERABILIDAD DETECTADA ({tipo})")
-                print(f"- Campo afectado: {campo_nombre}")
-                print(f"- Payload usado: {cadena}")
-                print(f"- Método: {metodo}")
-                print(f"- Acción: {accion}\n")
-
-
-            for error in errores_sql:
-                if error in contenido:
+                if cadena.lower() in contenido:
                     vulnerabilidad = True
-                    print(f"[!] ERROR SQL detectado en respuesta -> posible SQLi")
-                    print(f"- Error detectado: {error}\n")
+                    print("—" * 50)
+                    print(f"[!] POSIBLE VULNERABILIDAD DETECTADA ({tipo_payload})")
+                    print(f"- Campo afectado: {campo_nombre}")
+                    print(f"- Payload usado: {cadena}")
+                    print(f"- Método: {metodo}")
+                    print(f"- Acción: {accion}\n")
 
 
-            evidencias = []
-            if cadena.lower() in contenido:
-                evidencias.append("Reflejo en respuesta")
-            for error in errores_sql:
-                if error in contenido:
-                    evidencias.append("Error SQL detectado")
-
-            evidencia_final = ", ".join(evidencias) if evidencias else "Sin evidencia directa"
+                for error in errores_sql:
+                    if error in contenido:
+                        vulnerabilidad = True
+                        print(f"[!] ERROR SQL detectado en respuesta -> posible SQLi")
+                        print(f"- Error detectado: {error}\n")
 
 
-            if vulnerabilidad:
-                guardar_ataque_detectado(url, metodo, accion, campo_nombre, tipo, cadena, evidencia_final)
-                print()
+                evidencias = []
+                if cadena.lower() in contenido:
+                    evidencias.append("Reflejo en respuesta")
+                for error in errores_sql:
+                    if error in contenido:
+                        evidencias.append("Error SQL detectado")
 
-        except Exception as e:
-            print(f"[X] Error al enviar payload a {url_destino}: {e}")
+                evidencia_final = ", ".join(evidencias) if evidencias else "Sin evidencia directa"
+
+
+                if vulnerabilidad:
+                    guardar_ataque_detectado(url, metodo, accion, campo_nombre, tipo_payload, cadena, evidencia_final)
+                    print()
+
+            except Exception as e:
+                print(f"[X] Error al enviar payload a {url_destino}: {e}")
 
     conexion.close()
-
-
-    try:
-        if url.startswith("https://"):
-            dominio = url.replace("https://", "").split("/")[0]
-            http_url = f"http://{dominio}"
-        elif url.startswith("http://"):
-            http_url = url
-        else:
-            http_url = f"http://{url}"
-
-        respuesta = requests.get(http_url, allow_redirects=False, timeout=5)
-
-        location = respuesta.headers.get("Location", "")
-        if location.startswith("https://"):
-            return True
-        else:
-            return False
-    except:
-        return None  

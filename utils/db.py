@@ -1,10 +1,11 @@
 # Importaciones
 import sqlite3, os, json, csv
 from datetime import datetime
+from db.init_db import DB_PATH
 
 # Método que obtiene la lista de cabeceras de seguridad desde la base de datos
 def obtener_cabeceras_seguridad():
-    conexion = sqlite3.connect("db/scanner.db")
+    conexion = sqlite3.connect(DB_PATH)
     cursor = conexion.cursor()
 
     cursor.execute("SELECT nombre_cabecera FROM cabeceras_seguridad")
@@ -15,7 +16,7 @@ def obtener_cabeceras_seguridad():
 
 # Método que obtiene los patrones de errores SQL desde la base de datos
 def obtener_errores_sql():
-    conexion = sqlite3.connect("db/scanner.db")
+    conexion = sqlite3.connect(DB_PATH)
     cursor = conexion.cursor()
     cursor.execute("SELECT patron FROM errores_sql")
     errores = [fila[0].lower() for fila in cursor.fetchall()]
@@ -24,7 +25,7 @@ def obtener_errores_sql():
 
 # Método que guarda los resultados de un escaneo de cabeceras en la base de datos
 def guardar_resultado_escaneo(resultado):
-    conexion = sqlite3.connect("db/scanner.db")
+    conexion = sqlite3.connect(DB_PATH)
     cursor = conexion.cursor()
 
     url = resultado.get("URL", "desconocido")
@@ -59,7 +60,7 @@ def guardar_resultado_escaneo(resultado):
 
 # Método que guarda los resultados de un escaneo de formularios en la base de datos, evitando duplicados
 def guardar_formulario(url, metodo, accion, campo_nombre, campo_tipo, potencial):
-    conexion = sqlite3.connect("db/scanner.db")
+    conexion = sqlite3.connect(DB_PATH)
     cursor = conexion.cursor()
 
     cursor.execute("""
@@ -81,7 +82,7 @@ def guardar_formulario(url, metodo, accion, campo_nombre, campo_tipo, potencial)
 
 # Método que guarda un ataque detectado en la base de datos
 def guardar_ataque_detectado(url, metodo, accion, campo_nombre, tipo_payload, payload, evidencia):
-    conexion = sqlite3.connect("db/scanner.db")
+    conexion = sqlite3.connect(DB_PATH)
     cursor = conexion.cursor()
 
     fecha = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -102,7 +103,7 @@ def ruta_documentos_vulnerabilidades(nombre_archivo):
 
 # Método que exporta los escaneos de cabeceras y formularios detectados a un archivo JSON
 def exportar_a_json(nombre_archivo="export_resultados.json"):
-    conexion = sqlite3.connect("db/scanner.db")
+    conexion = sqlite3.connect(DB_PATH)
     cursor = conexion.cursor()
 
     # Cabeceras
@@ -148,7 +149,7 @@ def exportar_a_json(nombre_archivo="export_resultados.json"):
 
 # Método que exporta los escaneos de cabeceras y formularios detectados a un archivo CSV
 def exportar_a_csv(nombre_archivo="export_resultados.csv"):
-    conexion = sqlite3.connect("db/scanner.db")
+    conexion = sqlite3.connect(DB_PATH)
     cursor = conexion.cursor()
 
     nombre_archivo = ruta_documentos_vulnerabilidades(nombre_archivo)
@@ -176,7 +177,7 @@ def exportar_a_csv(nombre_archivo="export_resultados.csv"):
 
 # Método que exporta ataques detectados a JSON
 def exportar_ataques_a_json(nombre_archivo="export_ataques.json"):
-    conexion = sqlite3.connect("db/scanner.db")
+    conexion = sqlite3.connect(DB_PATH)
     cursor = conexion.cursor()
 
     cursor.execute("SELECT url, metodo, accion, campo_nombre, tipo_payload, payload, evidencia, fecha FROM ataques_detectados")
@@ -205,7 +206,7 @@ def exportar_ataques_a_json(nombre_archivo="export_ataques.json"):
 
 # Método que exporta ataques detectados a CSV
 def exportar_ataques_a_csv(nombre_archivo="export_ataques.csv"):
-    conexion = sqlite3.connect("db/scanner.db")
+    conexion = sqlite3.connect(DB_PATH)
     cursor = conexion.cursor()
 
     cursor.execute("SELECT url, metodo, accion, campo_nombre, tipo_payload, payload, evidencia, fecha FROM ataques_detectados")
