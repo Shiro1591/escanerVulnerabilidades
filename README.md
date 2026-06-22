@@ -4,13 +4,13 @@ Aplicación de escritorio en Python para reconocimiento y pruebas básicas de se
 
 El objetivo del proyecto es automatizar la fase de reconocimiento inicial en una auditoría web (las comprobaciones que cualquier pentester haría a mano al empezar) y dejar evidencia estructurada y exportable de lo encontrado.
 
----
+
 
 > ⚠️ **Uso responsable:** esta herramienta envía payloads activos (XSS, SQLi) a los formularios que encuentra. Únicamente debe usarse contra objetivos para los que tengas autorización explícita (entornos propios, laboratorios como DVWA, testphp.vulnweb.com o programas de bug bounty con alcance autorizado). Lanzar estos payloads contra sistemas de terceros sin permiso es ilegal en España (Art. 197 bis y ss. del Código Penal).
 
 ![Ventana principal](screenshots/ventana_principal.png)
 
----
+
 
 ## Funcionalidades
 
@@ -24,6 +24,7 @@ El objetivo del proyecto es automatizar la fase de reconocimiento inicial en una
 | Historial y exportación | Consulta resultados anteriores por URL; exporta a JSON/CSV | Reporting |
 
 ![Escaneo de cabeceras](screenshots/escaneo_cabeceras.png)
+![Enumeración de formularios](screenshots/escaneo_formularios.png) ![Simulación de ataque](screenshots/simulacion_ataque.png)
 
 ---
 
@@ -35,10 +36,6 @@ El objetivo del proyecto es automatizar la fase de reconocimiento inicial en una
   - si el payload aparece reflejado literalmente en la respuesta (indicio de XSS sin sanitizar)
   - si la respuesta contiene patrones de error de bases de datos conocidos (indicio de SQLi)
 
-![Enumeración de formularios](screenshots/escaneo_formularios.png) ![Simulación de ataque](screenshots/simulacion_ataque.png)
-
----
-
 ## Limitaciones conocidas
 
 Para que quede claro qué hace y qué no hace esta herramienta — no quiero venderla como algo que no es:
@@ -48,7 +45,6 @@ Para que quede claro qué hace y qué no hace esta herramienta — no quiero ven
 - **No gestiona JavaScript dinámico:** si los formularios se generan o se envían vía JS (SPA, fetch/AJAX), BeautifulSoup no los detecta porque no ejecuta JS.
 - **No mantiene sesión/autenticación:** no contempla login previo, por lo que no analiza páginas que requieran sesión iniciada.
 
----
 
 ## Tecnologías
 
@@ -58,7 +54,7 @@ Para que quede claro qué hace y qué no hace esta herramienta — no quiero ven
 - **requests** — peticiones HTTP
 - **BeautifulSoup4 + lxml** — parseo de HTML
 
----
+
 
 ## Estructura del proyecto
 
@@ -74,7 +70,6 @@ escanerVulnerabilidades/
 └── README.md
 ```
 
----
 
 ## Instalación y uso
 
